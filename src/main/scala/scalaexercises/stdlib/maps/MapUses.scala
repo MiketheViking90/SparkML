@@ -31,10 +31,16 @@ object MapUses {
   }
 
   def mapRemoves() {
+    val newMap = map -- List("MI", "OH")
+    val newMap1 = map - ("MI", "OH")
+    println(map)
+    println(newMap)
+    println(newMap1)
 
+    map - ("asdf")
   }
 
   def main(args: Array[String]): Unit = {
-    mapDefaults()
+    mapRemoves()
   }
 }
