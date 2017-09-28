@@ -2,6 +2,7 @@ package sparkml
 
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.DataFrame
 
@@ -18,7 +19,9 @@ object TitanicML {
     val test = getData(testDataFilePath)
     val predictions = lrModel.transform(test)
 
-    predictions.select("prediction").describe()
+    val evaluator = new BinaryClassificationEvaluator()
+    val accuracy = evaluator.evaluate(predictions)
+    println("Test Error = " + (1.0 - accuracy))
   }
 
   private def getData(filePath: String) : DataFrame = {
