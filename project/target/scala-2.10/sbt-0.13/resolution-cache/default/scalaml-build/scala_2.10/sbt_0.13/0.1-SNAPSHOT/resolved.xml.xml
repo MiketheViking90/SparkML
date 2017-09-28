@@ -4,7 +4,7 @@
 		module="scalaml-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20170922112559"
+		publication="20170928104942"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>
