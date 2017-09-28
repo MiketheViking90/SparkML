@@ -1,10 +1,11 @@
-package sparkml
+package sparkml.kaggle.titanic
 
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{LogisticRegression, RandomForestClassifier}
+import org.apache.spark.ml.classification.RandomForestClassifier
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.DataFrame
+import sparkml.Spark
 
 object TitanicML {
 
@@ -14,8 +15,7 @@ object TitanicML {
 
   def doML(): Unit = {
     val training = getData(trainDataFilePath)
-//    val lrModel = new LogisticRegression().fit(training)
-    val model = new RandomForestClassifier().fit(training)
+    val model = new RandomForestClassifier().setMaxBins(150).fit(training)
 
     val test = getData(testDataFilePath)
     val predictions = model.transform(test)
