@@ -1,7 +1,7 @@
 package sparkml
 
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.classification.{LogisticRegression, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.DataFrame
@@ -14,10 +14,11 @@ object TitanicML {
 
   def doML(): Unit = {
     val training = getData(trainDataFilePath)
-    val lrModel = new LogisticRegression().fit(training)
+//    val lrModel = new LogisticRegression().fit(training)
+    val model = new RandomForestClassifier().fit(training)
 
     val test = getData(testDataFilePath)
-    val predictions = lrModel.transform(test)
+    val predictions = model.transform(test)
 
     val evaluator = new BinaryClassificationEvaluator()
     val accuracy = evaluator.evaluate(predictions)
