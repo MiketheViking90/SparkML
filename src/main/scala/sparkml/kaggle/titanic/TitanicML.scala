@@ -5,11 +5,11 @@ import org.apache.spark.ml.classification.RandomForestClassifier
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.DataFrame
-import sparkml.Spark
+import sparkml.SparkUtils
 
 object TitanicML {
 
-  val spark = Spark.getSpark
+  val spark = SparkUtils.getSpark
   val trainDataFilePath = "data/titanic/train.csv"
   val testDataFilePath = "data/titanic/test.csv"
 
