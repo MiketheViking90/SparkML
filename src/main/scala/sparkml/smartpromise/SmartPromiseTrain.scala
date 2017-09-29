@@ -1,7 +1,7 @@
 package sparkml.smartpromise
 
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
+import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
@@ -47,9 +47,13 @@ object SmartPromiseTrain {
     val shipWeekIndexer = new StringIndexer().setInputCol("SHIPWEEKOFYEAR").setOutputCol("ShipWeekIndex")
     val shipMonthIndexer = new StringIndexer().setInputCol("SHIPMONTH").setOutputCol("ShipMonthIndex")
     val weightBandIndexer = new StringIndexer().setInputCol("WEIGHT_BAND").setOutputCol("WeightBandIndex")
+    val assembler = new VectorAssembler()
+      .setInputCols(Array("MediaVector", "SpeedCategoryIndex", "GlIndex", "OrderDayOfWeekIndex", "ShipWeekIndex",
+      "ShipMonthIndex", "WeightBandIndex"))
+      .setOutputCol("features")
 
     val pipeline = new Pipeline().setStages(Array(mediaIndexer, mediaEncoder, speedCategoryIndexer, glIndexer,
-      orderDayOfWeekIndexer, shipWeekIndexer, shipMonthIndexer, weightBandIndexer))
+      orderDayOfWeekIndexer, shipWeekIndexer, shipMonthIndexer, weightBandIndexer, assembler))
 
     pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label")
   }
