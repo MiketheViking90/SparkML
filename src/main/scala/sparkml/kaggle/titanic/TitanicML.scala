@@ -1,6 +1,6 @@
 package sparkml.kaggle.titanic
 
-import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.ml.classification.RandomForestClassifier
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
@@ -14,26 +14,39 @@ object TitanicML {
   val testDataFilePath = "data/titanic/test.csv"
 
   def doML(): Unit = {
-    val training = getData(trainDataFilePath)
-    val model = new RandomForestClassifier().setMaxBins(150).fit(training)
+    val model = getModel(trainDataFilePath)
 
-    val test = getData(testDataFilePath)
+    val test = spark.read
+      .option("header", true)
+      .option("inferSchema", true)
+      .csv(testDataFilePath)
+      .na.fill(-1, Array("Age"))
+      .na.fill("SHIP", Array("Cabin"))
+      .na.fill("Z", Array("Embarked"))
+    test.show
+
     val predictions = model.transform(test)
+    predictions.show
+//    val predictions = model.transform(test)
+//    predictions.show
+//
+//    val output = predictions.select("PassengerId", "prediction")
+//    output.write.csv("data/titanic/output")
+//    output.show()
 
-    val evaluator = new BinaryClassificationEvaluator()
-    val accuracy = evaluator.evaluate(predictions)
-    println("Test Error = " + (1.0 - accuracy))
+//    val evaluator = new BinaryClassificationEvaluator()
+//    val accuracy = evaluator.evaluate(predictions)
+//    println("Test Error = " + (1.0 - accuracy))
   }
 
-  private def getData(filePath: String) : DataFrame = {
+  private def getModel(filePath: String) : PipelineModel = {
     val df = spark.read
         .option("header", true)
         .option("inferSchema", true)
-        .csv(trainDataFilePath)
+        .csv(filePath)
         .na.fill(-1, Array("Age"))
         .na.fill("SHIP", Array("Cabin"))
         .na.fill("Z", Array("Embarked"))
-        .withColumnRenamed("Survived", "label")
 
     val sexIndexer = new StringIndexer()
       .setInputCol("Sex")
@@ -53,9 +66,11 @@ object TitanicML {
     val assembler = new VectorAssembler()
       .setInputCols(Array("Pclass", "sexVector", "Age", "SibSp", "Parch", "Fare", "CabinIndex", "EmbarkedIndex"))
         .setOutputCol("features")
+    val model = new RandomForestClassifier().setLabelCol("Survived").setMaxBins(150)
 
-    val pipeline = new Pipeline().setStages(Array(sexIndexer, sexEncoder, cabinIndexer, embarkedIndexer, assembler))
-    pipeline.fit(df).transform(df).select("features", "label")
+
+    val pipeline = new Pipeline().setStages(Array(sexIndexer, sexEncoder, cabinIndexer, embarkedIndexer, assembler, model))
+    pipeline.fit(df)
   }
 
   def main(args: Array[String]): Unit = {
