@@ -1,5 +1,8 @@
 package sparkml.smartpromise
 
+import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import sparkml.SparkUtils
@@ -9,17 +12,23 @@ object SmartPromiseTrain {
   val spark = SparkUtils.getSpark
   val dataFilePath = "data/smartpromise/data.txt"
 
-  def main(args: Array[String]): Unit = {
+  def trainModel(): Unit = {
+    val train = getData()
+    train.show()
+  }
+
+  private def getData(): DataFrame = {
     val df = spark.read
       .option("header", true)
       .option("inferSchema", true)
       .option("delimiter", "\t")
       .csv(dataFilePath)
       .na.fill(0, Array("WEIGHT", "WIDTH", "HEIGHT", "LENGTH"))
+      .withColumnRenamed("BUSDELIVERYDAYSS2D", "label")
 
     val weightCol = df("WEIGHT")
-    val dfBucketized = df.withColumn("ZIP3_O", (df("zip_o")/100).cast(to = IntegerType))
-      .withColumn("ZIP3_D", (df("zip_d")/100).cast(to = IntegerType))
+    val dfBucketized = df.withColumn("Zip3_O", (df("zip_o") / 100).cast(to = IntegerType))
+      .withColumn("Zip3_D", (df("zip_d") / 100).cast(to = IntegerType))
       .withColumn("WEIGHT_BAND",
         when(weightCol <= 0, "NO_WEIGHT")
           .otherwise(when(weightCol.between(0, 19.99), "SORTABLE")
@@ -30,7 +39,23 @@ object SmartPromiseTrain {
                 .or(df("HEIGHT").geq(108)), "HEAVY_BULKY")
                 .otherwise("NO_WEIGHT")))))
 
-    dfBucketized.printSchema()
-    dfBucketized.show
+    val mediaIndexer = new StringIndexer().setInputCol("MEDIA").setOutputCol("MediaIndex")
+    val mediaEncoder = new OneHotEncoder().setInputCol("MediaIndex").setOutputCol("MediaVector")
+    val speedCategoryIndexer = new StringIndexer().setInputCol("SPEEDCATEGORY").setOutputCol("SpeedCategoryIndex")
+    val glIndexer = new StringIndexer().setInputCol("GL").setOutputCol("GlIndex")
+    val orderDayOfWeekIndexer = new StringIndexer().setInputCol("ORDERDAYOFWEEK").setOutputCol("OrderDayOfWeekIndex")
+    val shipWeekIndexer = new StringIndexer().setInputCol("SHIPWEEKOFYEAR").setOutputCol("ShipWeekIndex")
+    val shipMonthIndexer = new StringIndexer().setInputCol("SHIPMONTH").setOutputCol("ShipMonthIndex")
+    val weightBandIndexer = new StringIndexer().setInputCol("WEIGHT_BAND").setOutputCol("WeightBandIndex")
+
+    val pipeline = new Pipeline().setStages(Array(mediaEncoder, speedCategoryIndexer, glIndexer, orderDayOfWeekIndexer,
+      shipWeekIndexer, shipMonthIndexer, weightBandIndexer))
+
+    pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label")
   }
+
+  def main(args: Array[String]) Unit = {
+    trainModel
+  }
+
 }
