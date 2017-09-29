@@ -1,7 +1,9 @@
 package sparkml.smartpromise
 
 import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
+import org.apache.spark.ml.regression.RandomForestRegressor
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
@@ -13,8 +15,19 @@ object SmartPromiseTrain {
   val dataFilePath = "data/smartpromise/data.txt"
 
   def trainModel(): Unit = {
-    val train = getData()
-    train.show()
+    val data = getData()
+    val Array(train, test) = data.randomSplit(Array(0.7, 0.3))
+
+    val rf = new RandomForestRegressor().setLabelCol("label").setFeaturesCol("features").setMaxBins(100)
+    val predictions = rf.fit(train).transform(test)
+
+    predictions.show(10)
+    val evaluator = new RegressionEvaluator()
+      .setLabelCol("label")
+      .setPredictionCol("prediction")
+      .setMetricName("rmse")
+    val rmse = evaluator.evaluate(predictions)
+    println(rmse)
   }
 
   private def getData(): DataFrame = {
