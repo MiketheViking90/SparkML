@@ -48,8 +48,8 @@ object SmartPromiseTrain {
     val shipMonthIndexer = new StringIndexer().setInputCol("SHIPMONTH").setOutputCol("ShipMonthIndex")
     val weightBandIndexer = new StringIndexer().setInputCol("WEIGHT_BAND").setOutputCol("WeightBandIndex")
 
-    val pipeline = new Pipeline().setStages(Array(mediaEncoder, speedCategoryIndexer, glIndexer, orderDayOfWeekIndexer,
-      shipWeekIndexer, shipMonthIndexer, weightBandIndexer))
+    val pipeline = new Pipeline().setStages(Array(mediaIndexer, mediaEncoder, speedCategoryIndexer, glIndexer,
+      orderDayOfWeekIndexer, shipWeekIndexer, shipMonthIndexer, weightBandIndexer))
 
     pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label")
   }
