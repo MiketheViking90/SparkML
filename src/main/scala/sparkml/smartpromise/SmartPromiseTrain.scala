@@ -22,9 +22,11 @@ object SmartPromiseTrain {
     val rfRangeModel = getModel("features", "range", train)
 
     val predictions = rfModel.transform(test)
-    val rangePredictions = rfRangeModel.setPredictionCol("predictedRange")transform(predictions)
+    val pred = rfRangeModel.setPredictionCol("predictedRange").transform(predictions)
+    val perf = pred.withColumn("ttDiff", pred("prediction") - pred("label"))
+      .withColumn("rangeDiff", pred("predictedRange") - pred("range"))
 
-    rangePredictions.show(50)
+    perf.show(50)
 
     val evaluator = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse")
     val rmse = evaluator.evaluate(predictions)
