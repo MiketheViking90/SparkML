@@ -1,9 +1,9 @@
 package sparkml.smartpromise
 
-import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.{Pipeline, Predictor}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
-import org.apache.spark.ml.regression.RandomForestRegressor
+import org.apache.spark.ml.regression.{RandomForestRegressionModel, RandomForestRegressor}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
@@ -18,16 +18,22 @@ object SmartPromiseTrain {
     val data = getData()
     val Array(train, test) = data.randomSplit(Array(0.7, 0.3))
 
-    val rf = new RandomForestRegressor().setLabelCol("label").setFeaturesCol("features").setMaxBins(100)
-    val predictions = rf.fit(train).transform(test)
+    val rfModel = getModel(train)
 
+    val predictions = rfModel.transform(test)
     predictions.show(10)
-    val evaluator = new RegressionEvaluator()
-      .setLabelCol("label")
-      .setPredictionCol("prediction")
-      .setMetricName("rmse")
+    val evaluator = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse")
     val rmse = evaluator.evaluate(predictions)
     println(rmse)
+  }
+
+  private def getModel(train: DataFrame): RandomForestRegressionModel = {
+    new RandomForestRegressor()
+      .setLabelCol("label")
+      .setFeaturesCol("features")
+      .setMaxBins(100)
+      .setNumTrees(50)
+      .fit(train)
   }
 
   private def getData(): DataFrame = {
@@ -62,7 +68,7 @@ object SmartPromiseTrain {
     val weightBandIndexer = new StringIndexer().setInputCol("WEIGHT_BAND").setOutputCol("WeightBandIndex")
     val assembler = new VectorAssembler()
       .setInputCols(Array("MediaVector", "SpeedCategoryIndex", "GlIndex", "OrderDayOfWeekIndex", "ShipWeekIndex",
-      "ShipMonthIndex", "WeightBandIndex"))
+        "ShipMonthIndex", "WeightBandIndex"))
       .setOutputCol("features")
 
     val pipeline = new Pipeline().setStages(Array(mediaIndexer, mediaEncoder, speedCategoryIndexer, glIndexer,
