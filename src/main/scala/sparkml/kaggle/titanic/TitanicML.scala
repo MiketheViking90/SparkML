@@ -4,12 +4,12 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.RandomForestClassifier
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import sparkml.SparkUtils
 
 object TitanicML {
 
-  val spark = SparkUtils.getSpark
+  val spark: SparkSession = SparkUtils.getSpark
   val trainDataFilePath = "data/titanic/train.csv"
   val testDataFilePath = "data/titanic/test.csv"
 
@@ -59,7 +59,7 @@ object TitanicML {
   }
 
   def main(args: Array[String]): Unit = {
-    doML
+    doML()
   }
 
 }
