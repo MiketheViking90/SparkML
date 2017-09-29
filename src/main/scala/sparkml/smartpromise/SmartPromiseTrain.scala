@@ -54,8 +54,7 @@ object SmartPromiseTrain {
     pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label")
   }
 
-  def main(args: Array[String]) Unit = {
+  def main(args: Array[String]): Unit = {
     trainModel
   }
-
 }
