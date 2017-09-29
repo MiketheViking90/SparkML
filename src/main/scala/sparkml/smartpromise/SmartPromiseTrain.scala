@@ -55,14 +55,11 @@ object SmartPromiseTrain {
     val dfBucketized = df.withColumn("Zip3_O", (df("zip_o") / 100).cast(to = IntegerType))
       .withColumn("Zip3_D", (df("zip_d") / 100).cast(to = IntegerType))
       .withColumn("WEIGHT_BAND",
-        when(weightCol <= 0, "NO_WEIGHT")
-          .otherwise(when(weightCol.between(0, 19.99), "SORTABLE")
-            .otherwise(when(weightCol.between(19.99, 150), "NON-SORTABLE")
-              .otherwise(when(weightCol.geq(150)
-                .or(df("WIDTH").geq(108))
-                .or(df("LENGTH").geq(108))
-                .or(df("HEIGHT").geq(108)), "HEAVY_BULKY")
-                .otherwise("NO_WEIGHT")))))
+        when(weightCol.between(0, 19.99), "SORTABLE")
+          .otherwise(when(weightCol.between(19.99, 150), "NON-SORTABLE")
+            .otherwise(when(
+              (weightCol >= 150) || (df("WIDTH") >= 108) || (df("LENGTH")>= 108) ||(df("HEIGHT") >= 108), "HEAVY_BULKY")
+        .otherwise("NO_WEIGHT"))))
       .withColumn("Range", df("BUSLPROMISEDDELIVERYDAYSS2D") - df("BUSEPROMISEDDELIVERYDAYSS2D"))
 
     val mediaIndexer = new StringIndexer().setInputCol("MEDIA").setOutputCol("MediaIndex")
@@ -85,6 +82,6 @@ object SmartPromiseTrain {
   }
 
   def main(args: Array[String]): Unit = {
-    trainModel
+    trainModel()
   }
 }
