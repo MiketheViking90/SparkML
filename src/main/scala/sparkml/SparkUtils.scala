@@ -14,7 +14,7 @@ object SparkUtils {
     spark
   }
 
-  def printNulls(df: DataFrame): Unit = {
+  def showNullCounts(df: DataFrame): Unit = {
     for (colName <- df.columns) {
       val col = df(colName)
       val cnt = df.select(colName).filter(col.isNull || col.isNaN || col === "").count
