@@ -18,19 +18,23 @@ object SmartPromiseTrain {
     val data = getData()
     val Array(train, test) = data.randomSplit(Array(0.7, 0.3))
 
-    val rfModel = getModel(train)
+    val rfModel = getModel("features", "label", train)
+    val rfRangeModel = getModel("features", "range", train)
 
     val predictions = rfModel.transform(test)
-    predictions.show(10)
+    val rangePredictions = rfRangeModel.setPredictionCol("predictedRange")transform(predictions)
+
+    rangePredictions.show(50)
+
     val evaluator = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse")
     val rmse = evaluator.evaluate(predictions)
     println(rmse)
   }
 
-  private def getModel(train: DataFrame): RandomForestRegressionModel = {
+  private def getModel(features: String, label: String, train: DataFrame): RandomForestRegressionModel = {
     new RandomForestRegressor()
-      .setLabelCol("label")
-      .setFeaturesCol("features")
+      .setLabelCol(label)
+      .setFeaturesCol(features)
       .setMaxBins(100)
       .setNumTrees(50)
       .fit(train)
@@ -57,6 +61,7 @@ object SmartPromiseTrain {
                 .or(df("LENGTH").geq(108))
                 .or(df("HEIGHT").geq(108)), "HEAVY_BULKY")
                 .otherwise("NO_WEIGHT")))))
+      .withColumn("Range", df("BUSLPROMISEDDELIVERYDAYSS2D") - df("BUSEPROMISEDDELIVERYDAYSS2D"))
 
     val mediaIndexer = new StringIndexer().setInputCol("MEDIA").setOutputCol("MediaIndex")
     val mediaEncoder = new OneHotEncoder().setInputCol("MediaIndex").setOutputCol("MediaVector")
@@ -74,7 +79,7 @@ object SmartPromiseTrain {
     val pipeline = new Pipeline().setStages(Array(mediaIndexer, mediaEncoder, speedCategoryIndexer, glIndexer,
       orderDayOfWeekIndexer, shipWeekIndexer, shipMonthIndexer, weightBandIndexer, assembler))
 
-    pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label")
+    pipeline.fit(dfBucketized).transform(dfBucketized).select("features", "label", "range")
   }
 
   def main(args: Array[String]): Unit = {
