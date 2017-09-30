@@ -48,20 +48,11 @@ object TitanicML {
         .na.fill("SHIP", Array("Cabin"))
         .na.fill("Z", Array("Embarked"))
 
-    val sexIndexer = new StringIndexer()
-      .setInputCol("Sex")
-      .setOutputCol("SexIndex")
-    val sexEncoder = new OneHotEncoder()
-      .setInputCol("SexIndex")
-      .setOutputCol("sexVector")
+    val sexIndexer = new StringIndexer().setInputCol("Sex").setOutputCol("SexIndex")
+    val sexEncoder = new OneHotEncoder().setInputCol("SexIndex").setOutputCol("sexVector")
 
-    val cabinIndexer = new StringIndexer()
-      .setInputCol("Cabin")
-      .setOutputCol("CabinIndex")
-
-    val embarkedIndexer = new StringIndexer()
-      .setInputCol("Embarked")
-      .setOutputCol("EmbarkedIndex")
+    val cabinIndexer = new StringIndexer().setInputCol("Cabin").setOutputCol("CabinIndex")
+    val embarkedIndexer = new StringIndexer().setInputCol("Embarked").setOutputCol("EmbarkedIndex")
 
     val assembler = new VectorAssembler()
       .setInputCols(Array("Pclass", "sexVector", "Age", "SibSp", "Parch", "Fare", "CabinIndex", "EmbarkedIndex"))
