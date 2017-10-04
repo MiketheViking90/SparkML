@@ -16,7 +16,20 @@ object SetUses {
   }
 
   def setOperations(): Unit = {
+    val mySet1 = Set("Michigan", "Ohio", "Wisconsin", "Iowa")
+    val mySet2 = Set("Wisconsin", "Michigan", "Minnesota")
 
+    val intersect = mySet1 & mySet2
+    println(intersect)
+
+    val union = mySet1 | mySet2
+    println(union)
+
+    println(union subsetOf mySet1)
+
+    println(mySet1 diff mySet2)
+
+    println(intersect.equals(Set("Michigan", "Wisconsin")))
   }
 
 
